@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo do Labirinto - Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <h1>Dashboard do Jogo do Labirinto</h1>
+    
+    <div id="maze-container">
+        <div id="ball"></div>
+    </div>
+
+    <div id="status-container">
+        <h2>Estado do Acelerômetro (Pico W)</h2>
+        <p><strong>Eixo X:</strong> <span id="status-accel-x">--</span></p>
+        <p><strong>Eixo Y:</strong> <span id="status-accel-y">--</span></p>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
