@@ -1,48 +1,60 @@
-// static/js/script.js
-
 document.addEventListener('DOMContentLoaded', () => {
-    
-    const ball = document.getElementById('ball');
     const mazeContainer = document.getElementById('maze-container');
-    
-    const statusAccelX = document.getElementById('status-accel-x');
-    const statusAccelY = document.getElementById('status-accel-y');
+    const levelDisplay = document.getElementById('level-display');
+    const gridSize = 5;
 
-    // Fator de escala para converter o valor do acelerômetro em movimento na tela.
-    // Você talvez precise ajustar este valor para ter a sensibilidade desejada!
-    const SCALING_FACTOR = 0.005;
+    // Cria as 25 células (LEDs) do grid uma única vez
+    for (let i = 0; i < gridSize * gridSize; i++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        cell.id = `cell-${i}`;
+        mazeContainer.appendChild(cell);
+    }
 
-    async function atualizarStatus() {
+    async function updateGrid() {
         try {
-            // 1. Busca os dados mais recentes do servidor
             const response = await fetch('/status');
-            const data = await response.json();
+            const gameState = await response.json();
 
-            // 2. Atualiza os valores de texto na tela
-            statusAccelX.textContent = data.accel_x;
-            statusAccelY.textContent = data.accel_y;
-
-            // 3. Calcula a nova posição da bolinha
-            // O valor do acelerômetro no eixo Y move a bolinha na vertical (top)
-            // O valor no eixo X move a bolinha na horizontal (left)
-            const mazeRect = mazeContainer.getBoundingClientRect();
+            if (!gameState || !gameState.labirinto || gameState.labirinto.length === 0) {
+                return; // Se não houver dados, não faz nada
+            }
             
-            // Centraliza o movimento: (metade da caixa) + (valor do sensor * escala)
-            let newX = (mazeRect.width / 2) + (data.accel_x * SCALING_FACTOR);
-            let newY = (mazeRect.height / 2) + (data.accel_y * SCALING_FACTOR);
-            
-            // Limita o movimento para que a bolinha não saia da caixa
-            newX = Math.max(0, Math.min(mazeRect.width - ball.offsetWidth, newX));
-            newY = Math.max(0, Math.min(mazeRect.height - ball.offsetHeight, newY));
+            levelDisplay.textContent = `Nível: ${gameState.nivel}`;
 
-            // 4. Aplica a nova posição à bolinha
-            ball.style.transform = `translate(${newX}px, ${newY}px)`;
+            const maze = gameState.labirinto;
+            const playerX = gameState.jogador_x;
+            const playerY = gameState.jogador_y;
 
+            // Percorre cada célula do labirinto
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    const cellValue = maze[y][x];
+                    
+                    // Lógica para encontrar o índice correto do LED na matriz sanfonada
+                    const index = (y % 2 !== 0) 
+                        ? (y * gridSize) + (gridSize - 1 - x) 
+                        : (y * gridSize) + x;
+
+                    const cellElement = document.getElementById(`cell-${index}`);
+                    
+                    // Remove todas as classes de cor antes de adicionar a nova
+                    cellElement.className = 'cell';
+
+                    if (x === playerX && y === playerY) {
+                        cellElement.classList.add('player'); // Pinta o jogador
+                    } else if (cellValue === 1) {
+                        cellElement.classList.add('wall'); // Pinta a parede
+                    } else if (cellValue === 2) {
+                        cellElement.classList.add('goal'); // Pinta a chegada
+                    }
+                }
+            }
         } catch (error) {
-            console.error("Erro ao buscar status:", error);
+            console.error("Erro ao buscar o estado do jogo:", error);
         }
     }
 
-    // Chama a função a cada 100 milissegundos para um movimento mais fluido
-    setInterval(atualizarStatus, 100);
+    // Atualiza o grid a cada 200 milissegundos
+    setInterval(updateGrid, 200);
 });
