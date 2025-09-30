@@ -1,13 +1,13 @@
-# Em dashboard/routes.py
-
 from flask import Blueprint, request, jsonify, render_template
 
-dashboard_bp = Blueprint('dashboard', __name__)
+dashboard_bp = Blueprint('dashboard', __name__, template_folder='templates')
 
-# O estado agora guarda os dados do labirinto
+# Agora o estado guarda o mapa completo e a posição do jogador
 estado_atual_jogo = {
-    "accel_x": 0,
-    "accel_y": 0
+    "labirinto": [],
+    "jogador_x": 0,
+    "jogador_y": 0,
+    "nivel": 1
 }
 
 @dashboard_bp.route('/dados', methods=['POST'])
@@ -16,10 +16,15 @@ def receber_dados():
     dados_recebidos = request.get_json()
     
     if dados_recebidos:
+        # Imprime os dados completos recebidos da placa
         print(f"Dados recebidos do labirinto: {dados_recebidos}")
-        # Atualiza o estado com os dados do acelerômetro
-        estado_atual_jogo['accel_x'] = dados_recebidos.get('accel_x', 0)
-        estado_atual_jogo['accel_y'] = dados_recebidos.get('accel_y', 0)
+        
+        # Atualiza o estado global com os novos dados do jogo
+        estado_atual_jogo['labirinto'] = dados_recebidos.get('labirinto', [])
+        estado_atual_jogo['jogador_x'] = dados_recebidos.get('jogador_x', 0)
+        estado_atual_jogo['jogador_y'] = dados_recebidos.get('jogador_y', 0)
+        estado_atual_jogo['nivel'] = dados_recebidos.get('nivel', 1)
+        
         return jsonify({"status": "sucesso"}), 200
     
     return jsonify({"status": "erro"}), 400
@@ -30,5 +35,4 @@ def index():
 
 @dashboard_bp.route('/status', methods=['GET'])
 def get_status():
-    # Envia o estado atual do jogo para a interface web
     return jsonify(estado_atual_jogo)
